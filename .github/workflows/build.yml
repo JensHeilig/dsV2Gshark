@@ -105,3 +105,44 @@ jobs:
       with:
         name: WS_profile_dsV2Gshark
         path: artifact_dir_profile/dsV2Gshark_profile.zip
+  build-linux-arm64:
+      runs-on: ubuntu-24.04-arm
+      steps:
+      - uses: actions/checkout@v4
+  
+      - name: Build Libraries
+        run: |
+          chmod +x ./build_all_linux.sh
+          ./build_all_linux.sh
+        working-directory: ./V2G_Libraries/v2gLib/
+  
+      - name: Build battery-data-exchange
+        run: cargo xtask ci
+        working-directory: ./V2G_Libraries/battery-data-exchange/
+  
+      - name: Prepare Artifact Directory
+        run: |
+            mkdir artifact_dir
+            cp ./V2G_Libraries/v2gLib/bin/* ./artifact_dir/
+            cp ./V2G_Libraries/battery-data-exchange/target/release/libbattery_data_exchange.so ./artifact_dir/battery_data_exchange.so
+            mkdir artifact_dir/plugins
+            cp ./Wireshark/plugins/* ./artifact_dir/plugins/
+            cp ./LICENSE ./artifact_dir/dsV2Gshark_LICENSE.txt
+            cp ./README.md ./artifact_dir/dsV2Gshark_README.txt
+  
+      - name: Upload Linux ARM64 Files
+        uses: actions/upload-artifact@v4
+        with:
+          name: dsV2Gshark_Files_Linux_ARM64
+          path: artifact_dir/*
+  
+      - name: Zip dsV2Gshark Wireshark Profile
+        run: |
+            mkdir artifact_dir_profile
+            zip -qq -r artifact_dir_profile/dsV2Gshark_profile.zip ./Wireshark/profiles/dsV2Gshark/
+  
+      - name: Upload WS Profile
+        uses: actions/upload-artifact@v4
+        with:
+          name: WS_profile_dsV2Gshark
+          path: artifact_dir_profile/dsV2Gshark_profile.zip
